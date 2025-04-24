@@ -1,6 +1,6 @@
 const process = require("node:process");
 const { Client } = require("pg");
-const { version } = require("./package.json");
+const { version } = require("./package.json"); // major.minor.patch
 require("dotenv").config();
 
 const client = new Client({
@@ -19,7 +19,7 @@ const args = process.argv;
     console.log("✅ connected to postgreSQL database\n");
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS todos (
+      CREATE TABLE IF NOT EXISTS to_do_list (
         task_id SERIAL PRIMARY KEY,
         task_name TEXT NOT NULL,
         done BOOLEAN DEFAULT false
@@ -36,24 +36,30 @@ const args = process.argv;
       }
       console.log("➕ creating new task\n");
 
-      await client.query(`INSERT INTO todos (task_name) VALUES ('${value}');`);
+      await client.query(
+        `INSERT INTO to_do_list (task_name) VALUES ('${value}');`
+      );
     } else if (flag == "--list") {
       if (value == "all") {
         console.log("▶️  all tasks:");
 
-        const res = await client.query(`SELECT * FROM todos;`);
+        const res = await client.query(`SELECT * FROM to_do_list;`);
         console.log(res.rows);
         console.log();
       } else if (value == "pending") {
         console.log("🔁 pending tasks");
 
-        const res = await client.query(`SELECT * FROM todos WHERE done=false;`);
+        const res = await client.query(
+          `SELECT * FROM to_do_list WHERE done=false;`
+        );
         console.log(res.rows);
         console.log();
       } else if (value == "done") {
         console.log("⏹️  finished tasks");
 
-        const res = await client.query(`SELECT * FROM todos WHERE done=true;`);
+        const res = await client.query(
+          `SELECT * FROM to_do_list WHERE done=true;`
+        );
         console.log(res.rows);
         console.log();
       } else {
@@ -65,23 +71,30 @@ const args = process.argv;
       }
       console.log(`✔️  marking task ${value} as finished\n`);
 
-      await client.query(`UPDATE todos SET done=true WHERE task_id=${value};`);
+      await client.query(
+        `UPDATE to_do_list SET done=true WHERE task_id=${value};`
+      );
     } else if (flag == "--delete") {
       if (!value) {
         throw "no task given\n";
       }
       console.log(`➖ deleting task ${value}\n`);
 
-      await client.query(`DELETE FROM todos WHERE task_id = ${value};`);
+      await client.query(`DELETE FROM to_do_list WHERE task_id = ${value};`);
+    } else if (flag == "--clear") {
+      console.log(`🗑️  emptying to-do list\n`);
+
+      await client.query(`DELETE FROM to_do_list;`);
     } else if (flag == "--help") {
       console.log(`📄 here are all the commands:\n`);
 
-      console.log("--new [task name] : to add a new todo item");
-      console.log("--list [all|pending|done] : to list the todo items");
-      console.log("--done [id] : to update a todo item");
-      console.log("--delete [id] : to delete a todo item");
-      console.log("--help : to list all the available options");
-      console.log("--version : to print the version of the application");
+      console.log("--new [task name] : add a new item");
+      console.log("--list [all|pending|done] : display to-do items");
+      console.log("--done [id] : update a to-do item");
+      console.log("--delete [id] : delete a to-do item");
+      console.log("--clear : empty to-do list");
+      console.log("--help : list all the available options");
+      console.log("--version : print program version");
       console.log();
     } else if (flag == "--version") {
       console.log(`🤖 program version: ${version}\n`);
