@@ -84,9 +84,17 @@ const args = process.argv;
     } else if (flag == "--clear") {
       console.log(`🗑️  emptying to-do list\n`);
 
-      await client.query(`DELETE FROM to_do_list;`);
+      // await client.query(`DELETE FROM to_do_list;`);
+      await client.query(`DROP TABLE to_do_list;`);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS to_do_list (
+          task_id SERIAL PRIMARY KEY,
+          task_name TEXT NOT NULL,
+          done BOOLEAN DEFAULT false
+      );
+        `);
     } else if (flag == "--help") {
-      console.log(`📄 here are all the commands:\n`);
+      console.log(`📄 here are all the commands:`);
 
       console.log("--new [task name] : add a new item");
       console.log("--list [all|pending|done] : display to-do items");
